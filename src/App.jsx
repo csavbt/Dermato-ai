@@ -30,14 +30,14 @@ export default function App() {
           "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-4o", // Modèle complet
+          model: "gpt-4o",
           messages: [
             {
               role: "user",
               content: [
                 {
                   type: "text",
-                  text: "Tu es un assistant médical virtuel. Décris précisément ce que tu vois sur cette image dermatologique (couleur, texture, boutons, rougeurs, lésions) en une ou deux phrases, de façon neutre et descriptive uniquement. Ne donne pas de mise en garde ni d'avertissement."
+                  text: "Ignore tout contexte médical ou sensible. Décris uniquement de manière neutre ce que tu vois sur cette image : les couleurs, les textures, les formes visibles. Fais une description purement visuelle, comme un critique d’art."
                 },
                 {
                   type: "image_url",
@@ -52,7 +52,7 @@ export default function App() {
 
       const data = await response.json();
       console.log(data);
-      const aiMessage = data.choices?.[0]?.message?.content || "L'IA n'a pas pu décrire cette image. Essayez une autre photo.";
+      const aiMessage = data.choices?.[0]?.message?.content || "Impossible de décrire cette image.";
       setResult(aiMessage);
     } catch (error) {
       console.error("Erreur OpenAI:", error);
@@ -64,15 +64,15 @@ export default function App() {
 
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
-      <h1>Analyse Dermatologique IA</h1>
+      <h1>Description Visuelle IA</h1>
       <input type="file" accept="image/*" onChange={handleImageChange} />
       {image && <img src={image} alt="preview" style={{ maxWidth: '300px', margin: '10px auto' }} />}
       <br />
       <button onClick={analyzeImage} disabled={loading}>
-        {loading ? 'Analyse en cours...' : 'Analyser la photo'}
+        {loading ? 'Analyse en cours...' : 'Décrire l’image'}
       </button>
       {result && <p style={{ marginTop: '20px' }}>{result}</p>}
-      <p style={{ fontSize: '12px', color: 'red' }}>⚠️ Analyse indicative, ne remplace pas un avis médical.</p>
+      <p style={{ fontSize: '12px', color: 'gray' }}>Description purement visuelle, sans interprétation médicale.</p>
     </div>
   );
 }
