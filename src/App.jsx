@@ -23,9 +23,9 @@ export default function App() {
     setLoading(true);
 
     try {
-      // Hugging Face BLIP accepte l'image encodée base64 dans JSON
+      // On envoie l'image encodée base64 au modèle Hugging Face vit-gpt2-image-captioning
       const response = await fetch(
-        'https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large',
+        'https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning',
         {
           method: 'POST',
           headers: {
@@ -33,7 +33,7 @@ export default function App() {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            inputs: image // on envoie directement l'image base64
+            inputs: image
           })
         }
       );
@@ -62,7 +62,7 @@ export default function App() {
 
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
-      <h1>Description Visuelle IA (Hugging Face)</h1>
+      <h1>Description Visuelle IA (Rapide)</h1>
       <input type="file" accept="image/*" onChange={handleImageChange} />
       {image && <img src={image} alt="preview" style={{ maxWidth: '300px', margin: '10px auto' }} />}
       <br />
@@ -70,7 +70,7 @@ export default function App() {
         {loading ? 'Analyse en cours...' : 'Décrire l’image'}
       </button>
       {result && <p style={{ marginTop: '20px' }}>{result}</p>}
-      <p style={{ fontSize: '12px', color: 'gray' }}>Description visuelle générée par Hugging Face BLIP-2.</p>
+      <p style={{ fontSize: '12px', color: 'gray' }}>Description générée par un modèle Hugging Face léger.</p>
     </div>
   );
 }
