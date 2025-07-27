@@ -23,37 +23,34 @@ export default function App() {
     setLoading(true);
 
     try {
-      // Convertir l'image base64 en blob
-      const base64Data = image.split(',')[1];
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
-
-      const formData = new FormData();
-      formData.append('file', blob, 'image.jpg');
-
-      // Appel Hugging Face BLIP-2
+      // Hugging Face BLIP accepte l'image encodée base64 dans JSON
       const response = await fetch(
         'https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large',
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACE_TOKEN}`
+            Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACE_TOKEN}`,
+            'Content-Type': 'application/json'
           },
-          body: blob
+          body: JSON.stringify({
+            inputs: image // on envoie directement l'image base64
+          })
         }
       );
 
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}`);
+      }
+
       const data = await response.json();
       console.log(data);
+
       if (Array.isArray(data) && data.length > 0 && data[0].generated_text) {
         setResult(data[0].generated_text);
+      } else if (data.error) {
+        setResult(`Erreur Hugging Face : ${data.error}`);
       } else {
-        setResult('Impossible de décrire cette image avec Hugging Face.');
+        setResult('Impossible de décrire cette image.');
       }
     } catch (error) {
       console.error('Erreur Hugging Face:', error);
