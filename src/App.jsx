@@ -29,20 +29,23 @@ export default function App() {
           'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'user',
               content: [
-                { type: 'text', text: 'Analyse cette image dermatologique et décris simplement ce que tu vois.' },
+                { type: 'text', text: 'Tu es un dermatologue virtuel. Analyse cette image de peau et décris en une phrase ce que tu observes, sans précautions inutiles.' },
                 { type: 'image_url', image_url: { url: image } }
               ]
             }
-          ]
+          ],
+          max_tokens: 300
         })
       });
       const data = await response.json();
-      setResult(data.choices?.[0]?.message?.content || 'Pas de réponse IA.');
+      console.log(data);
+      const aiMessage = data.choices?.[0]?.message?.content || "Aucune analyse disponible.";
+      setResult(aiMessage);
     } catch (e) {
       console.error(e);
       setResult('Erreur pendant l’analyse.');
@@ -60,7 +63,7 @@ export default function App() {
         {loading ? 'Analyse en cours...' : 'Analyser la photo'}
       </button>
       {result && <p style={{ marginTop: '20px' }}>{result}</p>}
-      <p style={{ fontSize: '12px', color: 'red' }}>⚠️ Ne remplace pas un avis médical.</p>
+      <p style={{ fontSize: '12px', color: 'red' }}>⚠️ Analyse indicative, ne remplace pas un avis médical.</p>
     </div>
   );
 }
