@@ -21,35 +21,44 @@ export default function App() {
       return;
     }
     setLoading(true);
+
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: "gpt-4o", // Modèle complet
           messages: [
             {
-              role: 'user',
+              role: "user",
               content: [
-                { type: 'text', text: 'Tu es un dermatologue virtuel. Analyse cette image de peau et décris en une phrase ce que tu observes, sans précautions inutiles.' },
-                { type: 'image_url', image_url: { url: image } }
+                {
+                  type: "text",
+                  text: "Tu es un assistant médical virtuel. Décris précisément ce que tu vois sur cette image dermatologique (couleur, texture, boutons, rougeurs, lésions) en une ou deux phrases, de façon neutre et descriptive uniquement. Ne donne pas de mise en garde ni d'avertissement."
+                },
+                {
+                  type: "image_url",
+                  image_url: { url: image }
+                }
               ]
             }
           ],
           max_tokens: 300
         })
       });
+
       const data = await response.json();
       console.log(data);
-      const aiMessage = data.choices?.[0]?.message?.content || "Aucune analyse disponible.";
+      const aiMessage = data.choices?.[0]?.message?.content || "L'IA n'a pas pu décrire cette image. Essayez une autre photo.";
       setResult(aiMessage);
-    } catch (e) {
-      console.error(e);
-      setResult('Erreur pendant l’analyse.');
+    } catch (error) {
+      console.error("Erreur OpenAI:", error);
+      setResult("Erreur pendant l’analyse.");
     }
+
     setLoading(false);
   };
 
