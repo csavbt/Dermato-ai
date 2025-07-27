@@ -23,40 +23,41 @@ export default function App() {
     setLoading(true);
 
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: "Ignore tout contexte médical ou sensible. Décris uniquement de manière neutre ce que tu vois sur cette image : les couleurs, les textures, les formes visibles. Fais une description purement visuelle, comme un critique d’art."
-                },
-                {
-                  type: "image_url",
-                  image_url: { url: image }
-                }
-              ]
-            }
-          ],
-          max_tokens: 300
-        })
-      });
+      // Convertir l'image base64 en blob
+      const base64Data = image.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+      const formData = new FormData();
+      formData.append('file', blob, 'image.jpg');
+
+      // Appel Hugging Face BLIP-2
+      const response = await fetch(
+        'https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACE_TOKEN}`
+          },
+          body: blob
+        }
+      );
 
       const data = await response.json();
       console.log(data);
-      const aiMessage = data.choices?.[0]?.message?.content || "Impossible de décrire cette image.";
-      setResult(aiMessage);
+      if (Array.isArray(data) && data.length > 0 && data[0].generated_text) {
+        setResult(data[0].generated_text);
+      } else {
+        setResult('Impossible de décrire cette image avec Hugging Face.');
+      }
     } catch (error) {
-      console.error("Erreur OpenAI:", error);
-      setResult("Erreur pendant l’analyse.");
+      console.error('Erreur Hugging Face:', error);
+      setResult('Erreur pendant l’analyse.');
     }
 
     setLoading(false);
@@ -64,7 +65,7 @@ export default function App() {
 
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
-      <h1>Description Visuelle IA</h1>
+      <h1>Description Visuelle IA (Hugging Face)</h1>
       <input type="file" accept="image/*" onChange={handleImageChange} />
       {image && <img src={image} alt="preview" style={{ maxWidth: '300px', margin: '10px auto' }} />}
       <br />
@@ -72,7 +73,7 @@ export default function App() {
         {loading ? 'Analyse en cours...' : 'Décrire l’image'}
       </button>
       {result && <p style={{ marginTop: '20px' }}>{result}</p>}
-      <p style={{ fontSize: '12px', color: 'gray' }}>Description purement visuelle, sans interprétation médicale.</p>
+      <p style={{ fontSize: '12px', color: 'gray' }}>Description visuelle générée par Hugging Face BLIP-2.</p>
     </div>
   );
 }
