@@ -1,0 +1,66 @@
+
+import React, { useState } from 'react';
+
+export default function App() {
+  const [image, setImage] = useState(null);
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImage(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const analyzeImage = async () => {
+    if (!image) {
+      alert('Veuillez choisir une photo.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Analyse cette image dermatologique et décris simplement ce que tu vois.' },
+                { type: 'image_url', image_url: { url: image } }
+              ]
+            }
+          ]
+        })
+      });
+      const data = await response.json();
+      setResult(data.choices?.[0]?.message?.content || 'Pas de réponse IA.');
+    } catch (e) {
+      console.error(e);
+      setResult('Erreur pendant l’analyse.');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ textAlign: 'center', padding: '20px' }}>
+      <h1>Analyse Dermatologique IA</h1>
+      <input type="file" accept="image/*" onChange={handleImageChange} />
+      {image && <img src={image} alt="preview" style={{ maxWidth: '300px', margin: '10px auto' }} />}
+      <br />
+      <button onClick={analyzeImage} disabled={loading}>
+        {loading ? 'Analyse en cours...' : 'Analyser la photo'}
+      </button>
+      {result && <p style={{ marginTop: '20px' }}>{result}</p>}
+      <p style={{ fontSize: '12px', color: 'red' }}>⚠️ Ne remplace pas un avis médical.</p>
+    </div>
+  );
+}
